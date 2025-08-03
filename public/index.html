@@ -625,7 +625,7 @@
   <!-- Modal Nhập Tên -->
   <div id="name-modal" class="modal active">
     <div class="modal-content glass-card">
-      <h2>Chào mừng đến với Neon Chat</h2>
+      <h2>Chào mừng đến với A& NEVERGIVEUP</h2>
       <p>Vui lòng nhập tên của bạn để bắt đầu trò chuyện</p>
       <form id="name-form">
         <input type="text" id="username-input" placeholder="Tên của bạn..." required autofocus />
@@ -649,7 +649,7 @@
   <div class="chat-container" id="chat-container">
     <div class="header glass-card">
       <div>
-        <h2>Neon Chat</h2>
+        <h2>A7</h2>
         <div class="online-status">Online</div>
       </div>
       <button class="toggle-mode" title="Toggle dark mode">
@@ -735,7 +735,7 @@
 
     // Hàm khởi tạo chat
     function initializeChat() {
-      AVATAR_URL = "https://i.pravatar.cc/80?u=" + Math.floor(Math.random() * 1000);
+      AVATAR_URL = "https://scontent.fhph1-2.fna.fbcdn.net/v/t39.30808-6/525042448_122101266248961073_625097444526180617_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=t0YUumT_Pr4Q7kNvwELVdVI&_nc_oc=AdkoilsrxdNNPa3wglcOZGr7wB1qUzieTz1ZpHzKj1lCvUNyK2rpgAJCHXdqlR2doByWSxT6HlSabGRdbrtOVmbz&_nc_zt=23&_nc_ht=scontent.fhph1-2.fna&_nc_gid=Qw_vm5yK1vKWKU3EH-ODnA&oh=00_AfSzeUBYiMvWVEYlUBxaVD2LAATROpFAV4AvADV2ZIF9TA&oe=6894CD8C" + Math.floor(Math.random() * 1000);
       
       // Kết nối Socket.IO
       socket = io();
@@ -758,7 +758,7 @@
         bubble.className = "message system";
         bubble.innerHTML = `
           <div class="bubble system">
-            <span style="color: var(--primary);">${data.username}</span> đã tham gia phòng chat
+            <span style="color: var(--primary);">${data.username}</span> đã tham gia phòng chat của tk
             <div class="time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
           </div>
         `;
@@ -999,19 +999,9 @@
           const welcomeMessages = [
             {
               name: "Hệ thống",
-              msg: "Chào mừng bạn đến với Neon Chat!",
-              avatar: "https://i.pravatar.cc/80?u=system"
+              msg: "Cộng 1 bé",
+              avatar: "https://scontent.fhph1-2.fna.fbcdn.net/v/t39.30808-6/525042448_122101266248961073_625097444526180617_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=t0YUumT_Pr4Q7kNvwELVdVI&_nc_oc=AdkoilsrxdNNPa3wglcOZGr7wB1qUzieTz1ZpHzKj1lCvUNyK2rpgAJCHXdqlR2doByWSxT6HlSabGRdbrtOVmbz&_nc_zt=23&_nc_ht=scontent.fhph1-2.fna&_nc_gid=Qw_vm5yK1vKWKU3EH-ODnA&oh=00_AfSzeUBYiMvWVEYlUBxaVD2LAATROpFAV4AvADV2ZIF9TA&oe=6894CD8C"
             },
-            {
-              name: "Hệ thống",
-              msg: "Nhập tin nhắn và bấm Gửi để bắt đầu trò chuyện",
-              avatar: "https://i.pravatar.cc/80?u=system"
-            },
-            {
-              name: "Hệ thống",
-              msg: "Bạn có thể gửi hình ảnh bằng cách nhấn vào biểu tượng hình ảnh",
-              avatar: "https://i.pravatar.cc/80?u=system"
-            }
           ];
           
           welcomeMessages.forEach((msg, i) => {
