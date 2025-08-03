@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Neon Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-light: #f5f7ff;
@@ -18,14 +19,16 @@
       --card-bg-light: rgba(255, 255, 255, 0.6);
       --card-bg-dark: rgba(20, 20, 35, 0.6);
       --error: #ef4444;
+      --success: #10b981;
     }
 
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      margin: 0;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       transition: all 0.3s ease;
       background: var(--bg-light);
@@ -44,13 +47,126 @@
         radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 0.05) 0px, transparent 50%);
     }
 
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-content {
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      background: var(--card-bg-light);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      transform: translateY(-20px);
+      transition: transform 0.3s ease;
+    }
+
+    body.dark .modal-content {
+      background: var(--card-bg-dark);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .modal.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal h2 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .modal p {
+      margin-bottom: 1.5rem;
+      color: var(--text-light);
+    }
+
+    body.dark .modal p {
+      color: var(--text-dark);
+    }
+
+    #name-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    #username-input {
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: none;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.8);
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark #username-input {
+      background: rgba(30, 30, 45, 0.8);
+      color: var(--text-dark);
+    }
+
+    #username-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--primary-glow);
+    }
+
+    #name-form button {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    #name-form button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px var(--primary-glow);
+    }
+
+    /* Chat Container Styles */
     .chat-container {
       max-width: 600px;
       margin: 0 auto;
-      display: flex;
+      display: none;
       flex-direction: column;
       height: 100vh;
       padding: 0 1rem;
+    }
+
+    .chat-container.active {
+      display: flex;
     }
 
     .glass-card {
@@ -92,7 +208,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      color: #10b981;
+      color: var(--success);
     }
 
     .online-status::before {
@@ -100,7 +216,7 @@
       display: block;
       width: 8px;
       height: 8px;
-      background: #10b981;
+      background: var(--success);
       border-radius: 50%;
       animation: pulse 1.5s infinite;
     }
@@ -429,6 +545,7 @@
       border-radius: 2px;
       margin-top: 8px;
       overflow: hidden;
+      display: none;
     }
 
     .progress-bar {
@@ -444,6 +561,40 @@
       margin-top: 4px;
       text-align: center;
       display: none;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card-bg-light);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      z-index: 1001;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    body.dark .notification {
+      background: var(--card-bg-dark);
+    }
+
+    .notification.show {
+      opacity: 1;
+    }
+
+    .notification.success {
+      border-left: 4px solid var(--success);
+    }
+
+    .notification.error {
+      border-left: 4px solid var(--error);
     }
 
     @media (max-width: 600px) {
@@ -471,10 +622,34 @@
   <div class="glow glow-1"></div>
   <div class="glow glow-2"></div>
   
-  <div class="chat-container">
+  <!-- Modal Nhập Tên -->
+  <div id="name-modal" class="modal active">
+    <div class="modal-content glass-card">
+      <h2>Chào mừng đến với Neon Chat</h2>
+      <p>Vui lòng nhập tên của bạn để bắt đầu trò chuyện</p>
+      <form id="name-form">
+        <input type="text" id="username-input" placeholder="Tên của bạn..." required autofocus />
+        <button type="submit">Bắt đầu trò chuyện</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Thông báo -->
+  <div id="notification" class="notification">
+    <svg id="notification-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+      <line x1="9" y1="9" x2="9.01" y2="9"></line>
+      <line x1="15" y1="9" x2="15.01" y2="9"></line>
+    </svg>
+    <span id="notification-message">Thông báo</span>
+  </div>
+
+  <!-- Chat Container -->
+  <div class="chat-container" id="chat-container">
     <div class="header glass-card">
       <div>
-        <h2>A7 NEVER GIVE UP</h2>
+        <h2>Neon Chat</h2>
         <div class="online-status">Online</div>
       </div>
       <button class="toggle-mode" title="Toggle dark mode">
@@ -511,123 +686,262 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io();
+    // Biến toàn cục
+    let USERNAME = '';
+    let AVATAR_URL = '';
+    let socket = null;
+    let typingTimeout;
+
+    // DOM Elements
+    const nameModal = document.getElementById('name-modal');
+    const nameForm = document.getElementById('name-form');
+    const usernameInput = document.getElementById('username-input');
+    const chatContainer = document.getElementById('chat-container');
     const messages = document.getElementById("messages");
     const typing = document.getElementById("typing");
-    const input = document.getElementById("message-input");
-    const form = document.getElementById("chat-form");
+    const messageInput = document.getElementById("message-input");
+    const chatForm = document.getElementById("chat-form");
     const modeBtn = document.querySelector(".toggle-mode");
     const fileInput = document.getElementById("file-input");
     const progressContainer = document.getElementById("progress-container");
     const progressBar = document.getElementById("progress-bar");
     const errorMessage = document.getElementById("error-message");
-    
-    const AVATAR_URL = "https://scontent.fhph1-2.fna.fbcdn.net/v/t39.30808-6/525042448_122101266248961073_625097444526180617_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=t0YUumT_Pr4Q7kNvwELVdVI&_nc_oc=AdkoilsrxdNNPa3wglcOZGr7wB1qUzieTz1ZpHzKj1lCvUNyK2rpgAJCHXdqlR2doByWSxT6HlSabGRdbrtOVmbz&_nc_zt=23&_nc_ht=scontent.fhph1-2.fna&_nc_gid=3jP_K6t6HmKrThw_DDVR8w&oh=00_AfRYht2H5hM9KdOIO9x3FQJLdlaMwX9vweLNLNYY5kVSfg&oe=6894CD8C" + Math.floor(Math.random() * 1000);
-    const USERNAME = prompt("Nhập tên của bạn") || "Khách";
-    let typingTimeout;
+    const notification = document.getElementById('notification');
+    const notificationIcon = document.getElementById('notification-icon');
+    const notificationMessage = document.getElementById('notification-message');
 
-    // Hide progress bar initially
-    progressContainer.style.display = 'none';
-
-    // Dark mode toggle
-    modeBtn.onclick = () => {
-      document.body.classList.toggle("dark");
-      localStorage.setItem('darkMode', document.body.classList.contains('dark'));
-    };
-
-    // Check for saved dark mode preference
-    if (localStorage.getItem('darkMode') === 'true') {
-      document.body.classList.add('dark');
+    // Hàm hiển thị thông báo
+    function showNotification(message, type = 'info') {
+      notification.className = `notification ${type}`;
+      notificationMessage.textContent = message;
+      
+      // Đổi icon theo loại thông báo
+      switch(type) {
+        case 'success':
+          notificationIcon.innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>';
+          break;
+        case 'error':
+          notificationIcon.innerHTML = '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>';
+          break;
+        default:
+          notificationIcon.innerHTML = '<circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line>';
+      }
+      
+      notification.classList.add('show');
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
     }
 
-    // Gửi tin nhắn
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const msg = input.value.trim();
-      if (msg) {
-        socket.emit("chat message", { 
-          msg, 
-          name: USERNAME, 
-          avatar: AVATAR_URL 
+    // Hàm khởi tạo chat
+    function initializeChat() {
+      AVATAR_URL = "https://i.pravatar.cc/80?u=" + Math.floor(Math.random() * 1000);
+      
+      // Kết nối Socket.IO
+      socket = io();
+      
+      // Xử lý sự kiện kết nối
+      socket.on('connect', () => {
+        console.log('Connected as:', USERNAME);
+        // Gửi thông tin người dùng mới đến server
+        socket.emit('new user', {
+          username: USERNAME,
+          avatar: AVATAR_URL
         });
-        input.value = "";
-        socket.emit("stop typing");
-      }
-    });
+        
+        showNotification(`Đã kết nối với tên ${USERNAME}`, 'success');
+      });
+      
+      // Xử lý khi có người dùng mới tham gia
+      socket.on('user joined', (data) => {
+        const bubble = document.createElement("div");
+        bubble.className = "message system";
+        bubble.innerHTML = `
+          <div class="bubble system">
+            <span style="color: var(--primary);">${data.username}</span> đã tham gia phòng chat
+            <div class="time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+          </div>
+        `;
+        messages.appendChild(bubble);
+        messages.scrollTop = messages.scrollHeight;
+      });
+      
+      // Xử lý khi có người rời khỏi
+      socket.on('user left', (data) => {
+        const bubble = document.createElement("div");
+        bubble.className = "message system";
+        bubble.innerHTML = `
+          <div class="bubble system">
+            <span style="color: var(--primary);">${data.username}</span> đã rời khỏi
+            <div class="time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+          </div>
+        `;
+        messages.appendChild(bubble);
+        messages.scrollTop = messages.scrollHeight;
+      });
+      
+      // Xử lý tin nhắn chat
+      socket.on('chat message', (data) => {
+        const isYou = data.name === USERNAME;
+        const bubble = document.createElement("div");
+        bubble.className = `message ${isYou ? "you" : "other"}`;
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    // Đang gõ
-    input.addEventListener("input", () => {
-      socket.emit("typing", USERNAME);
-      clearTimeout(typingTimeout);
-      typingTimeout = setTimeout(() => {
-        socket.emit("stop typing");
-      }, 2000);
-    });
-
-    // Xử lý upload hình ảnh
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      // Kiểm tra kích thước file (tối đa 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        showError('Kích thước file tối đa là 5MB');
-        return;
-      }
-      
-      // Kiểm tra loại file
-      if (!file.type.match('image.*')) {
-        showError('Chỉ được phép tải lên hình ảnh');
-        return;
-      }
-      
-      // Hiển thị thanh tiến trình
-      progressContainer.style.display = 'block';
-      progressBar.style.width = '0%';
-      errorMessage.style.display = 'none';
-      
-      // Tạo FormData để gửi file
-      const formData = new FormData();
-      formData.append('image', file);
-      formData.append('name', USERNAME);
-      formData.append('avatar', AVATAR_URL);
-      
-      // Tạo XMLHttpRequest để upload
-      const xhr = new XMLHttpRequest();
-      
-      // Theo dõi tiến trình upload
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const percentComplete = (e.loaded / e.total) * 100;
-          progressBar.style.width = percentComplete + '%';
-        }
-      };
-      
-      // Xử lý khi upload hoàn tất
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          const response = JSON.parse(xhr.responseText);
-          // Hiển thị hình ảnh ngay lập tức cho người gửi
-          displayImageMessage(response.imageUrl, USERNAME, AVATAR_URL, true);
-          progressContainer.style.display = 'none';
-          fileInput.value = '';
+        if (data.imageUrl) {
+          // Tin nhắn hình ảnh
+          bubble.innerHTML = `
+            <img src="${data.avatar}" class="avatar">
+            <div>
+              <div class="username">${data.name}</div>
+              <div class="bubble">
+                <img src="${data.imageUrl}" class="image-message" onclick="expandImage('${data.imageUrl}')">
+              </div>
+              <div class="time">${now}</div>
+            </div>
+          `;
         } else {
-          showError('Lỗi khi tải lên hình ảnh');
-          progressContainer.style.display = 'none';
+          // Tin nhắn văn bản
+          bubble.innerHTML = `
+            <img src="${data.avatar}" class="avatar">
+            <div>
+              <div class="username">${data.name}</div>
+              <div class="bubble">${data.msg}</div>
+              <div class="time">${now}</div>
+            </div>
+          `;
         }
+        
+        messages.appendChild(bubble);
+        messages.scrollTop = messages.scrollHeight;
+        
+        // Hiệu ứng xuất hiện
+        bubble.style.opacity = '0';
+        bubble.style.transform = isYou ? 'translateX(10px)' : 'translateX(-10px)';
+        setTimeout(() => {
+          bubble.style.transition = 'all 0.3s ease';
+          bubble.style.opacity = '1';
+          bubble.style.transform = 'translateX(0)';
+        }, 10);
+      });
+      
+      // Xử lý khi có người đang gõ
+      socket.on('typing', (name) => {
+        typing.innerText = `${name} đang soạn tin nhắn...`;
+      });
+      
+      // Xử lý khi ngừng gõ
+      socket.on('stop typing', () => {
+        typing.innerText = "";
+      });
+      
+      // Xử lý lỗi kết nối
+      socket.on('connect_error', (err) => {
+        showNotification('Lỗi kết nối với server', 'error');
+      });
+      
+      // Gửi tin nhắn
+      chatForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const msg = messageInput.value.trim();
+        if (msg) {
+          socket.emit("chat message", { 
+            msg, 
+            name: USERNAME, 
+            avatar: AVATAR_URL 
+          });
+          messageInput.value = "";
+          socket.emit("stop typing");
+        }
+      });
+      
+      // Đang gõ
+      messageInput.addEventListener("input", () => {
+        socket.emit("typing", USERNAME);
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+          socket.emit("stop typing");
+        }, 2000);
+      });
+      
+      // Dark mode toggle
+      modeBtn.onclick = () => {
+        document.body.classList.toggle("dark");
+        localStorage.setItem('darkMode', document.body.classList.contains('dark'));
       };
       
-      // Xử lý lỗi
-      xhr.onerror = () => {
-        showError('Lỗi kết nối');
-        progressContainer.style.display = 'none';
-      };
+      // Kiểm tra dark mode từ localStorage
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark');
+      }
       
-      // Gửi request
-      xhr.open('POST', '/upload', true);
-      xhr.send(formData);
-    });
+      // Xử lý upload ảnh
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // Kiểm tra kích thước file (tối đa 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          showError('Kích thước file tối đa là 5MB');
+          return;
+        }
+        
+        // Kiểm tra loại file
+        if (!file.type.match('image.*')) {
+          showError('Chỉ được phép tải lên hình ảnh');
+          return;
+        }
+        
+        // Hiển thị thanh tiến trình
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+        errorMessage.style.display = 'none';
+        
+        // Tạo FormData để gửi file
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('name', USERNAME);
+        formData.append('avatar', AVATAR_URL);
+        
+        // Tạo XMLHttpRequest để upload
+        const xhr = new XMLHttpRequest();
+        
+        // Theo dõi tiến trình upload
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            progressBar.style.width = percentComplete + '%';
+          }
+        };
+        
+        // Xử lý khi upload hoàn tất
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            showNotification('Đã gửi ảnh thành công', 'success');
+            progressContainer.style.display = 'none';
+            fileInput.value = '';
+          } else {
+            showError('Lỗi khi tải lên hình ảnh');
+            progressContainer.style.display = 'none';
+          }
+        };
+        
+        // Xử lý lỗi
+        xhr.onerror = () => {
+          showError('Lỗi kết nối');
+          progressContainer.style.display = 'none';
+        };
+        
+        // Gửi request
+        xhr.open('POST', '/upload', true);
+        xhr.send(formData);
+      });
+      
+      // Hiển thị chat container
+      chatContainer.classList.add('active');
+    }
 
+    // Hàm hiển thị lỗi
     function showError(message) {
       errorMessage.textContent = message;
       errorMessage.style.display = 'block';
@@ -636,35 +950,7 @@
       }, 3000);
     }
 
-    function displayImageMessage(imageUrl, name, avatar, isYou = false) {
-      const bubble = document.createElement("div");
-      bubble.className = `message ${isYou ? "you" : "other"}`;
-      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      bubble.innerHTML = `
-        <img src="${avatar}" class="avatar">
-        <div>
-          <div class="username">${name}</div>
-          <div class="bubble">
-            <img src="${imageUrl}" class="image-message" onclick="expandImage('${imageUrl}')">
-          </div>
-          <div class="time">${now}</div>
-        </div>
-      `;
-      messages.appendChild(bubble);
-      messages.scrollTop = messages.scrollHeight;
-      
-      // Add subtle animation
-      bubble.style.opacity = '0';
-      bubble.style.transform = isYou ? 'translateX(10px)' : 'translateX(-10px)';
-      setTimeout(() => {
-        bubble.style.transition = 'all 0.3s ease';
-        bubble.style.opacity = '1';
-        bubble.style.transform = 'translateX(0)';
-      }, 10);
-    }
-
-    // Hiển thị hình ảnh phóng to
+    // Hàm phóng to ảnh
     window.expandImage = (imageUrl) => {
       const container = document.createElement('div');
       container.className = 'image-container';
@@ -673,64 +959,82 @@
       document.body.appendChild(container);
     };
 
-    socket.on("typing", (name) => {
-      typing.innerText = `${name} đang soạn tin nhắn...`;
-    });
-
-    socket.on("stop typing", () => {
-      typing.innerText = "";
-    });
-
-    // Nhận tin nhắn
-    socket.on("chat message", (data) => {
-      const isYou = data.name === USERNAME;
-      const bubble = document.createElement("div");
-      bubble.className = `message ${isYou ? "you" : "other"}`;
-      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      if (data.imageUrl) {
-        // Tin nhắn hình ảnh
-        displayImageMessage(data.imageUrl, data.name, data.avatar, isYou);
-      } else {
-        // Tin nhắn văn bản
-        bubble.innerHTML = `
-          <img src="${data.avatar}" class="avatar">
-          <div>
-            <div class="username">${data.name}</div>
-            <div class="bubble">${data.msg}</div>
-            <div class="time">${now}</div>
-          </div>
-        `;
-        messages.appendChild(bubble);
-        messages.scrollTop = messages.scrollHeight;
+    // Xử lý form nhập tên
+    nameForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = usernameInput.value.trim();
+      
+      if (name) {
+        USERNAME = name;
         
-        // Add subtle animation
-        bubble.style.opacity = '0';
-        bubble.style.transform = isYou ? 'translateX(10px)' : 'translateX(-10px)';
+        // Ẩn modal
+        nameModal.classList.remove('active');
+        
+        // Khởi tạo chat
         setTimeout(() => {
-          bubble.style.transition = 'all 0.3s ease';
-          bubble.style.opacity = '1';
-          bubble.style.transform = 'translateX(0)';
-        }, 10);
+          initializeChat();
+        }, 300);
+      } else {
+        // Hiệu ứng shake nếu không nhập tên
+        usernameInput.style.border = '1px solid var(--error)';
+        usernameInput.animate([
+          { transform: 'translateX(0)' },
+          { transform: 'translateX(-5px)' },
+          { transform: 'translateX(5px)' },
+          { transform: 'translateX(0)' }
+        ], {
+          duration: 300,
+          iterations: 2
+        });
       }
     });
 
-    // Add some sample messages on load
+    // Focus vào ô nhập tên khi modal hiển thị
+    usernameInput.focus();
+
+    // Thêm tin nhắn chào mừng
     window.addEventListener('DOMContentLoaded', () => {
-      const sampleMessages = [
-        {
-          name: "Hệ thống",
-          msg: "Cộng một bé mới vàoo tên gì thì cứ tự giới thiệu nhé...!!",
-          avatar: "https://scontent.fhph1-2.fna.fbcdn.net/v/t39.30808-6/525042448_122101266248961073_625097444526180617_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=t0YUumT_Pr4Q7kNvwELVdVI&_nc_oc=AdkoilsrxdNNPa3wglcOZGr7wB1qUzieTz1ZpHzKj1lCvUNyK2rpgAJCHXdqlR2doByWSxT6HlSabGRdbrtOVmbz&_nc_zt=23&_nc_ht=scontent.fhph1-2.fna&_nc_gid=3jP_K6t6HmKrThw_DDVR8w&oh=00_AfRYht2H5hM9KdOIO9x3FQJLdlaMwX9vweLNLNYY5kVSfg&oe=6894CD8C"
-        },
-      ];
-      
       setTimeout(() => {
-        sampleMessages.forEach((msg, i) => {
-          setTimeout(() => {
-            socket.emit("chat message", msg);
-          }, i * 800);
-        });
+        if (messages.children.length === 0) {
+          const welcomeMessages = [
+            {
+              name: "Hệ thống",
+              msg: "Chào mừng bạn đến với Neon Chat!",
+              avatar: "https://i.pravatar.cc/80?u=system"
+            },
+            {
+              name: "Hệ thống",
+              msg: "Nhập tin nhắn và bấm Gửi để bắt đầu trò chuyện",
+              avatar: "https://i.pravatar.cc/80?u=system"
+            },
+            {
+              name: "Hệ thống",
+              msg: "Bạn có thể gửi hình ảnh bằng cách nhấn vào biểu tượng hình ảnh",
+              avatar: "https://i.pravatar.cc/80?u=system"
+            }
+          ];
+          
+          welcomeMessages.forEach((msg, i) => {
+            setTimeout(() => {
+              const bubble = document.createElement("div");
+              bubble.className = "message system";
+              bubble.innerHTML = `
+                <div class="bubble system">
+                  <strong>${msg.name}:</strong> ${msg.msg}
+                  <div class="time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
+              `;
+              messages.appendChild(bubble);
+              messages.scrollTop = messages.scrollHeight;
+              
+              bubble.style.opacity = '0';
+              setTimeout(() => {
+                bubble.style.transition = 'opacity 0.3s ease';
+                bubble.style.opacity = '1';
+              }, 10);
+            }, i * 800);
+          });
+        }
       }, 1000);
     });
   </script>
