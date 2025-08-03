@@ -705,6 +705,41 @@ body.dark .avatar-option.upload-option span {
   object-fit: cover;
 }
   </style>
+   <style>
+    /* CSS styles giữ nguyên từ phiên bản trước */
+    .online-counter {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+    .online-list {
+      position: fixed;
+      top: 50px;
+      right: 10px;
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .online-user {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .online-user-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+  </style>
 </head>
 <body>
   <div class="glow glow-1"></div>
@@ -1146,6 +1181,79 @@ body.dark .avatar-option.upload-option span {
         }
       }, 1000);
     });
+  </script>
+    <script>
+    // Khởi tạo kết nối Socket.IO
+    const socket = io();
+    let USERNAME = '';
+    let AVATAR_URL = '';
+    
+    // DOM Elements
+    const onlineCounter = document.getElementById('online-counter');
+    const onlineCount = document.getElementById('online-count');
+    const onlineList = document.getElementById('online-list');
+    const onlineUsersContainer = document.getElementById('online-users-container');
+    
+    // Toggle hiển thị danh sách online
+    onlineCounter.addEventListener('click', () => {
+      onlineList.style.display = onlineList.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    // Xử lý khi nhận cập nhật số người online
+    socket.on('online update', (data) => {
+      onlineCount.textContent = data.onlineCount;
+      
+      // Cập nhật danh sách người online
+      onlineUsersContainer.innerHTML = '';
+      data.onlineUsers.forEach(user => {
+        const userElement = document.createElement('div');
+        userElement.className = 'online-user';
+        userElement.innerHTML = `
+          <img src="${user.avatar || 'https://i.pravatar.cc/80'}" class="online-user-avatar">
+          <span class="online-user-name">${user.username}</span>
+        `;
+        onlineUsersContainer.appendChild(userElement);
+      });
+    });
+    
+    // Khi form nhập tên được submit
+    document.getElementById('name-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username-input').value.trim();
+      
+      if (username) {
+        USERNAME = username;
+        AVATAR_URL = `https://i.pravatar.cc/80?u=${username}`;
+        
+        // Ẩn modal nhập tên
+        document.getElementById('name-modal').classList.remove('active');
+        
+        // Gửi thông tin user đến server
+        socket.emit('new user', {
+          username: USERNAME,
+          userId: generateUserId(),
+          avatar: AVATAR_URL
+        });
+        
+        // Hiển thị chat container
+        setTimeout(() => {
+          document.getElementById('chat-container').classList.add('active');
+        }, 300);
+      }
+    });
+    
+    // Hàm tạo ID người dùng
+    function generateUserId() {
+      return 'user-' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    // Lấy thông tin online khi tải trang
+    fetch('/online')
+      .then(res => res.json())
+      .then(data => {
+        onlineCount.textContent = data.onlineCount;
+        // Có thể cập nhật danh sách người online tại đây nếu cần
+      });
   </script>
 </body>
 </html>
