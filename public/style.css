@@ -1,0 +1,198 @@
+/* Reset và body */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f0f2f5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  position: relative;
+}
+
+/* Dark Mode toggle button */
+#darkToggle {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 10000;
+}
+
+/* Chat container */
+.chat-container {
+  width: 100%;
+  max-width: 500px;
+  height: 90vh;
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header */
+header {
+  background-color: #0084ff;
+  color: white;
+  padding: 16px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* Messages list */
+#messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+}
+
+/* Message bubble */
+.message {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 20px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.mine {
+  background-color: #0084ff;
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.theirs {
+  background-color: #e4e6eb;
+  color: black;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+/* Chat form */
+#chat-form {
+  display: flex;
+  padding: 12px;
+  border-top: 1px solid #ddd;
+  align-items: center;
+  gap: 8px;
+  background-color: #fff;
+}
+
+/* Text input */
+#msg {
+  flex: 1;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 16px;
+  font-size: 15px;
+  background-color: #f0f2f5;
+  outline: none;
+}
+
+/* Tools (emoji, image, send) */
+.tools {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Emoji & image buttons */
+.tools button,
+.tools label {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Typing indicator */
+#typing {
+  padding: 0 16px 8px 16px;
+  color: #666;
+  font-style: italic;
+  min-height: 20px;
+}
+
+/* Username popup */
+#username-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.popup-box {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  text-align: center;
+  width: 320px;
+}
+
+.popup-box input {
+  padding: 10px 16px;
+  margin-top: 12px;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+.popup-box button {
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: #0084ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Image message styling */
+.message img {
+  max-width: 100%;
+  border-radius: 12px;
+  display: block;
+  margin-top: 6px;
+}
+
+/* Dark mode */
+body.dark {
+  background-color: #1e1e1e;
+  color: white;
+}
+body.dark .chat-container {
+  background-color: #2c2c2c;
+}
+body.dark .message.mine {
+  background-color: #007aff;
+}
+body.dark .message.theirs {
+  background-color: #3a3a3a;
+  color: #eee;
+}
+body.dark #msg,
+body.dark button,
+body.dark label {
+  background-color: #333;
+  color: white;
+}

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Neon Chat</title>
+  <style>
+    :root {
+      --bg-light: #f5f7ff;
+      --bg-dark: #0f0f1a;
+      --text-light: #2d3748;
+      --text-dark: #f8fafc;
+      --bubble-light: rgba(255, 255, 255, 0.8);
+      --bubble-dark: rgba(30, 30, 45, 0.8);
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.4);
+      --secondary: #8b5cf6;
+      --card-bg-light: rgba(255, 255, 255, 0.6);
+      --card-bg-dark: rgba(20, 20, 35, 0.6);
+      --error: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      transition: all 0.3s ease;
+      background: var(--bg-light);
+      color: var(--text-light);
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 0.1) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 0.1) 0px, transparent 50%);
+    }
+
+    body.dark {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+      background-image: 
+        radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 0.05) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 0.05) 0px, transparent 50%);
+    }
+
+    .chat-container {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      padding: 0 1rem;
+    }
+
+    .glass-card {
+      background: var(--card-bg-light);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    body.dark .glass-card {
+      background: var(--card-bg-dark);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      margin: 1rem 0;
+    }
+
+    .header h2 {
+      margin: 0;
+      font-weight: 600;
+      font-size: 1.5rem;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .online-status {
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #10b981;
+    }
+
+    .online-status::before {
+      content: "";
+      display: block;
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .toggle-mode {
+      background: transparent;
+      border: none;
+      color: var(--text-light);
+      padding: 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+    }
+
+    body.dark .toggle-mode {
+      color: var(--text-dark);
+    }
+
+    .toggle-mode:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark .toggle-mode:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) transparent;
+    }
+
+    .messages::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .messages::-webkit-scrollbar-thumb {
+      background-color: var(--primary);
+      border-radius: 3px;
+    }
+
+    .message {
+      display: flex;
+      margin-bottom: 1.25rem;
+      gap: 12px;
+      max-width: 85%;
+      transition: all 0.3s ease;
+    }
+
+    .message.you {
+      flex-direction: row-reverse;
+      margin-left: auto;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .bubble {
+      position: relative;
+      background: var(--bubble-light);
+      padding: 12px 16px;
+      border-radius: 18px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: var(--text-light);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      line-height: 1.5;
+      transition: all 0.3s ease;
+      max-width: 100%;
+      word-wrap: break-word;
+    }
+
+    body.dark .bubble {
+      background: var(--bubble-dark);
+      color: var(--text-dark);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .message.you .bubble {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.other .bubble {
+      border-bottom-left-radius: 4px;
+    }
+
+    .username {
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+      font-weight: 600;
+      color: var(--text-light);
+    }
+
+    body.dark .username {
+      color: var(--text-dark);
+    }
+
+    .message.you .username {
+      color: rgba(255, 255, 255, 0.8);
+      text-align: right;
+    }
+
+    .time {
+      font-size: 0.7rem;
+      margin-top: 4px;
+      color: rgba(0, 0, 0, 0.5);
+      text-align: right;
+    }
+
+    body.dark .time {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .message.you .time {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .typing {
+      font-size: 0.85rem;
+      margin-top: -0.5rem;
+      margin-bottom: 1rem;
+      color: #888;
+      padding: 0 1rem;
+      height: 20px;
+    }
+
+    form {
+      display: flex;
+      gap: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 16px;
+      background: var(--card-bg-light);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      flex-wrap: wrap;
+    }
+
+    body.dark form {
+      background: var(--card-bg-dark);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .input-container {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: none;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.8);
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      min-width: 0;
+    }
+
+    body.dark input[type="text"] {
+      background: rgba(30, 30, 45, 0.8);
+      color: var(--text-dark);
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--primary-glow);
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0 20px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px var(--primary-glow);
+      height: 44px;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px var(--primary-glow);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .file-upload {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.05);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body.dark .file-upload {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .file-upload:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    body.dark .file-upload:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .file-upload input {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .file-upload svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .glow {
+      position: fixed;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--primary-glow), transparent 70%);
+      filter: blur(30px);
+      z-index: -1;
+      opacity: 0.6;
+    }
+
+    .glow-1 {
+      top: 20%;
+      left: 10%;
+    }
+
+    .glow-2 {
+      bottom: 10%;
+      right: 10%;
+    }
+
+    .image-message {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 12px;
+      margin-top: 8px;
+      display: block;
+      object-fit: contain;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .image-message:hover {
+      transform: scale(1.02);
+    }
+
+    .image-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+    }
+
+    .expanded-image {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 4px;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 2px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .error-message {
+      color: var(--error);
+      font-size: 0.8rem;
+      margin-top: 4px;
+      text-align: center;
+      display: none;
+    }
+
+    @media (max-width: 600px) {
+      .chat-container {
+        padding: 0;
+      }
+      
+      .header, form {
+        border-radius: 0;
+        margin: 0;
+      }
+      
+      .header {
+        padding: 1rem;
+      }
+      
+      form {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  
+  <div class="chat-container">
+    <div class="header glass-card">
+      <div>
+        <h2>A7 NEVER GIVE UP</h2>
+        <div class="online-status">Online</div>
+      </div>
+      <button class="toggle-mode" title="Toggle dark mode">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="messages" id="messages"></div>
+    <div class="typing" id="typing"></div>
+
+    <form id="chat-form" class="glass-card">
+      <div class="input-container">
+        <div class="file-upload" title="Gửi hình ảnh">
+          <input type="file" id="file-input" accept="image/*" />
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
+            <line x1="16" y1="5" x2="22" y2="5"></line>
+            <line x1="19" y1="2" x2="19" y2="8"></line>
+            <circle cx="9" cy="9" r="2"></circle>
+            <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+          </svg>
+        </div>
+        <input type="text" id="message-input" placeholder="Nhập tin nhắn..." autocomplete="off"/>
+        <button type="submit">Gửi</button>
+      </div>
+      <div class="progress-container" id="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="error-message" id="error-message"></div>
+    </form>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const messages = document.getElementById("messages");
+    const typing = document.getElementById("typing");
+    const input = document.getElementById("message-input");
+    const form = document.getElementById("chat-form");
+    const modeBtn = document.querySelector(".toggle-mode");
+    const fileInput = document.getElementById("file-input");
+    const progressContainer = document.getElementById("progress-container");
+    const progressBar = document.getElementById("progress-bar");
+    const errorMessage = document.getElementById("error-message");
+    
+    const AVATAR_URL = "https://scontent.fhph1-2.fna.fbcdn.net/v/t39.30808-6/525042448_122101266248961073_625097444526180617_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=t0YUumT_Pr4Q7kNvwELVdVI&_nc_oc=AdkoilsrxdNNPa3wglcOZGr7wB1qUzieTz1ZpHzKj1lCvUNyK2rpgAJCHXdqlR2doByWSxT6HlSabGRdbrtOVmbz&_nc_zt=23&_nc_ht=scontent.fhph1-2.fna&_nc_gid=3jP_K6t6HmKrThw_DDVR8w&oh=00_AfRYht2H5hM9KdOIO9x3FQJLdlaMwX9vweLNLNYY5kVSfg&oe=6894CD8C" + Math.floor(Math.random() * 1000);
+    const USERNAME = prompt("Nhập tên của bạn") || "Khách";
+    let typingTimeout;
+
+    // Hide progress bar initially
+    progressContainer.style.display = 'none';
+
+    // Dark mode toggle
+    modeBtn.onclick = () => {
+      document.body.classList.toggle("dark");
+      localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+    };
+
+    // Check for saved dark mode preference
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.body.classList.add('dark');
+    }
+
+    // Gửi tin nhắn
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const msg = input.value.trim();
+      if (msg) {
+        socket.emit("chat message", { 
+          msg, 
+          name: USERNAME, 
+          avatar: AVATAR_URL 
+        });
+        input.value = "";
+        socket.emit("stop typing");
+      }
+    });
+
+    // Đang gõ
+    input.addEventListener("input", () => {
+      socket.emit("typing", USERNAME);
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        socket.emit("stop typing");
+      }, 2000);
+    });
+
+    // Xử lý upload hình ảnh
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      // Kiểm tra kích thước file (tối đa 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showError('Kích thước file tối đa là 5MB');
+        return;
+      }
+      
+      // Kiểm tra loại file
+      if (!file.type.match('image.*')) {
+        showError('Chỉ được phép tải lên hình ảnh');
+        return;
+      }
+      
+      // Hiển thị thanh tiến trình
+      progressContainer.style.display = 'block';
+      progressBar.style.width = '0%';
+      errorMessage.style.display = 'none';
+      
+      // Tạo FormData để gửi file
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('name', USERNAME);
+      formData.append('avatar', AVATAR_URL);
+      
+      // Tạo XMLHttpRequest để upload
+      const xhr = new XMLHttpRequest();
+      
+      // Theo dõi tiến trình upload
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = (e.loaded / e.total) * 100;
+          progressBar.style.width = percentComplete + '%';
+        }
+      };
+      
+      // Xử lý khi upload hoàn tất
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText);
+          // Hiển thị hình ảnh ngay lập tức cho người gửi
+          displayImageMessage(response.imageUrl, USERNAME, AVATAR_URL, true);
+          progressContainer.style.display = 'none';
+          fileInput.value = '';
+        } else {
+          showError('Lỗi khi tải lên hình ảnh');
+          progressContainer.style.display = 'none';
+        }
+      };
+      
+      // Xử lý lỗi
+      xhr.onerror = () => {
+        showError('Lỗi kết nối');
+        progressContainer.style.display = 'none';
+      };
+      
+      // Gửi request
+      xhr.open('POST', '/upload', true);
+      xhr.send(formData);
+    });
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = 'block';
+      setTimeout(() => {
+        errorMessage.style.display = 'none';
+      }, 3000);
+    }
+
+    function displayImageMessage(imageUrl, name, avatar, isYou = false) {
+      const bubble = document.createElement("div");
+      bubble.className = `message ${isYou ? "you" : "other"}`;
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      bubble.innerHTML = `
+        <img src="${avatar}" class="avatar">
+        <div>
+          <div class="username">${name}</div>
+          <div class="bubble">
+            <img src="${imageUrl}" class="image-message" onclick="expandImage('${imageUrl}')">
+          </div>
+          <div class="time">${now}</div>
+        </div>
+      `;
+      messages.appendChild(bubble);
+      messages.scrollTop = messages.scrollHeight;
+      
+      // Add subtle animation
+      bubble.style.opacity = '0';
+      bubble.style.transform = isYou ? 'translateX(10px)' : 'translateX(-10px)';
+      setTimeout(() => {
+        bubble.style.transition = 'all 0.3s ease';
+        bubble.style.opacity = '1';
+        bubble.style.transform = 'translateX(0)';
+      }, 10);
+    }
+
+    // Hiển thị hình ảnh phóng to
+    window.expandImage = (imageUrl) => {
+      const container = document.createElement('div');
+      container.className = 'image-container';
+      container.innerHTML = `<img src="${imageUrl}" class="expanded-image">`;
+      container.onclick = () => document.body.removeChild(container);
+      document.body.appendChild(container);
+    };
+
+    socket.on("typing", (name) => {
+      typing.innerText = `${name} đang soạn tin nhắn...`;
+    });
+
+    socket.on("stop typing", () => {
+      typing.innerText = "";
+    });
+
+    // Nhận tin nhắn
+    socket.on("chat message", (data) => {
+      const isYou = data.name === USERNAME;
+      const bubble = document.createElement("div");
+      bubble.className = `message ${isYou ? "you" : "other"}`;
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (data.imageUrl) {
+        // Tin nhắn hình ảnh
+        displayImageMessage(data.imageUrl, data.name, data.avatar, isYou);
+      } else {
+        // Tin nhắn văn bản
+        bubble.innerHTML = `
+          <img src="${data.avatar}" class="avatar">
+          <div>
+            <div class="username">${data.name}</div>
+            <div class="bubble">${data.msg}</div>
+            <div class="time">${now}</div>
+          </div>
+        `;
+        messages.appendChild(bubble);
+        messages.scrollTop = messages.scrollHeight;
+        
+        // Add subtle animation
+        bubble.style.opacity = '0';
+        bubble.style.transform = isYou ? 'translateX(10px)' : 'translateX(-10px)';
+        setTimeout(() => {
+          bubble.style.transition = 'all 0.3s ease';
+          bubble.style.opacity = '1';
+          bubble.style.transform = 'translateX(0)';
+        }, 10);
+      }
+    });
+
+    // Add some sample messages on load
+    window.addEventListener('DOMContentLoaded', () => {
+      const sampleMessages = [
+        {
+          name: "Hệ thống",
+          msg: "Cộng một bé mới vàoo tên gì thì cứ tự giới thiệu nhé...!!",
+          avatar: "https://scontent.fhph1-2.fna.fbcdn.net/v/t39.30808-6/525042448_122101266248961073_625097444526180617_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=t0YUumT_Pr4Q7kNvwELVdVI&_nc_oc=AdkoilsrxdNNPa3wglcOZGr7wB1qUzieTz1ZpHzKj1lCvUNyK2rpgAJCHXdqlR2doByWSxT6HlSabGRdbrtOVmbz&_nc_zt=23&_nc_ht=scontent.fhph1-2.fna&_nc_gid=3jP_K6t6HmKrThw_DDVR8w&oh=00_AfRYht2H5hM9KdOIO9x3FQJLdlaMwX9vweLNLNYY5kVSfg&oe=6894CD8C"
+        },
+      ];
+      
+      setTimeout(() => {
+        sampleMessages.forEach((msg, i) => {
+          setTimeout(() => {
+            socket.emit("chat message", msg);
+          }, i * 800);
+        });
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
