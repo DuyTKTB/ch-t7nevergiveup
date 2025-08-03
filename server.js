@@ -45,7 +45,14 @@ const upload = multer({
 app.use(express.json());
 app.use(express.static('public'));
 
-// Route upload ảnh
+// Middleware log IP
+app.use((req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  console.log(`IP truy cập: ${ip} - ${new Date().toISOString()}`);
+  next();
+});
+
+// Route upload ảnh chat
 app.post('/upload', upload.single('image'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Không có file được tải lên' });
@@ -54,7 +61,6 @@ app.post('/upload', upload.single('image'), (req, res) => {
   const imageUrl = `/uploads/${req.file.filename}`;
   const { name, avatar } = req.body;
 
-  // Gửi ảnh đến tất cả client
   io.emit('chat message', {
     name,
     avatar,
@@ -62,6 +68,23 @@ app.post('/upload', upload.single('image'), (req, res) => {
   });
 
   res.json({ imageUrl });
+});
+
+// Route upload avatar cá nhân
+app.post('/upload-avatar', upload.single('avatar'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Không có file được tải lên' });
+  }
+
+  const avatarDir = 'public/uploads/avatars/';
+  if (!fs.existsSync(avatarDir)) {
+    fs.mkdirSync(avatarDir, { recursive: true });
+  }
+
+  const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+  fs.renameSync(req.file.path, avatarDir + req.file.filename);
+
+  res.json({ avatarUrl });
 });
 
 // Xử lý lỗi upload
@@ -74,30 +97,28 @@ app.use((err, req, res, next) => {
   next();
 });
 
-// Theo dõi người dùng
+// Quản lý người dùng
 const users = {};
 
 // Xử lý kết nối Socket.IO
 io.on('connection', (socket) => {
-  console.log('Người dùng mới kết nối');
-
-  // Khi người dùng đăng nhập
+  const clientIp = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
+  console.log(`Người dùng kết nối từ IP: ${clientIp}`);
+  
   socket.on('new user', (userData) => {
     socket.username = userData.username;
     socket.avatar = userData.avatar;
     users[socket.id] = userData;
     
-    // Thông báo có người dùng mới
     io.emit('user joined', {
       username: userData.username,
       avatar: userData.avatar,
       time: new Date().toLocaleTimeString()
     });
     
-    console.log(`${userData.username} đã tham gia phòng chat`);
+    console.log(`${userData.username} (${clientIp}) đã tham gia phòng chat`);
   });
 
-  // Xử lý tin nhắn chat
   socket.on('chat message', (data) => {
     io.emit('chat message', {
       ...data,
@@ -105,20 +126,16 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Xử lý khi có người đang gõ
   socket.on('typing', (name) => {
     socket.broadcast.emit('typing', name);
   });
 
-  // Xử lý khi ngừng gõ
   socket.on('stop typing', () => {
     socket.broadcast.emit('stop typing');
   });
 
-  // Xử lý khi ngắt kết nối
   socket.on('disconnect', () => {
     if (socket.username) {
-      // Thông báo có người rời khỏi
       io.emit('user left', {
         username: socket.username,
         time: new Date().toLocaleTimeString()
@@ -130,71 +147,18 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server đang chạy trên port ${PORT}`);
-});
-// Thêm route xử lý upload avatar
-app.post('/upload-avatar', upload.single('avatar'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'Không có file được tải lên' });
-  }
-
-  const avatarUrl = `/uploads/avatars/${req.file.filename}`;
-  
-  // Tạo thư mục avatars nếu chưa có
-  const avatarDir = 'public/uploads/avatars/';
-  if (!fs.existsSync(avatarDir)) {
-    fs.mkdirSync(avatarDir, { recursive: true });
-  }
-
-  // Di chuyển file vào thư mục avatars
-  fs.renameSync(req.file.path, avatarDir + req.file.filename);
-
-  res.json({ avatarUrl });
-});
-// Thêm middleware để log IP
-app.use((req, res, next) => {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  console.log(`IP truy cập: ${ip} - Thời gian: ${new Date().toISOString()}`);
-  next();
-});
-
-// Socket.IO connection
-io.on('connection', (socket) => {
-  const clientIp = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
-  console.log(`Người dùng kết nối từ IP: ${clientIp}`);
-  
-  // Lưu IP vào object socket
-  socket.clientIp = clientIp;
-  
-  // ... phần xử lý kết nối hiện có
-});
-// Thêm model IP (nếu dùng database)
-const mongoose = require('mongoose');
-const ipSchema = new mongoose.Schema({
-  ip: String,
-  timestamp: { type: Date, default: Date.now },
-  userAgent: String
-});
-const IpModel = mongoose.model('IpLog', ipSchema);
-
-// Middleware lưu IP
-app.use(async (req, res, next) => {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  await IpModel.create({
-    ip,
-    userAgent: req.headers['user-agent']
-  });
-  next();
-});
-// Thêm route admin (bảo mật bằng password)
-app.get('/admin/ips', async (req, res) => {
-  // Kiểm tra auth
-  if (req.query.password !== 'YOUR_SECURE_PASSWORD') {
+// Route admin đơn giản (không dùng database)
+app.get('/admin/ips', (req, res) => {
+  // Kiểm tra auth đơn giản
+  if (req.query.password !== process.env.ADMIN_PASSWORD) {
     return res.status(403).send('Truy cập bị từ chối');
   }
   
-  const ips = await IpModel.find().sort({ timestamp: -1 });
-  res.json(ips);
+  // Trả về thông báo vì không dùng database
+  res.send('Chức năng xem IP đã được log trong console server');
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server đang chạy trên port ${PORT}`);
 });
