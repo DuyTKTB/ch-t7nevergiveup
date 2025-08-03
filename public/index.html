@@ -616,6 +616,94 @@
         border-bottom-right-radius: 0;
       }
     }
+    /* Avatar Selection Styles */
+.avatar-selection {
+  margin: 1.5rem 0;
+}
+
+.avatar-options {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.avatar-option {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+body.dark .avatar-option {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.avatar-option.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.avatar-option img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-option.upload-option {
+  flex-direction: column;
+  padding: 8px;
+}
+
+.avatar-option.upload-option label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  text-align: center;
+}
+
+.avatar-option.upload-option svg {
+  width: 20px;
+  height: 20px;
+  margin-bottom: 4px;
+}
+
+.avatar-option.upload-option span {
+  font-size: 0.7rem;
+  color: var(--text-light);
+}
+
+body.dark .avatar-option.upload-option span {
+  color: var(--text-dark);
+}
+
+.avatar-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  overflow: hidden;
+  border: 3px solid var(--primary);
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
   </style>
 </head>
 <body>
@@ -623,16 +711,47 @@
   <div class="glow glow-2"></div>
   
   <!-- Modal Nhập Tên -->
-  <div id="name-modal" class="modal active">
-    <div class="modal-content glass-card">
-      <h2>Chào mừng đến với A7 NEVERGIVEUP</h2>
-      <p>Vui lòng nhập tên của bạn để bắt đầu trò chuyện</p>
-      <form id="name-form">
-        <input type="text" id="username-input" placeholder="Tên của bạn..." required autofocus />
-        <button type="submit">Bắt đầu trò chuyện</button>
-      </form>
+<!-- Trong phần modal nhập tên -->
+<div id="name-modal" class="modal active">
+  <div class="modal-content glass-card">
+    <h2>Chào mừng đến với Neon Chat</h2>
+    <p>Vui lòng chọn avatar và nhập tên của bạn</p>
+    
+    <div class="avatar-selection">
+      <div class="avatar-options">
+        <!-- Avatar mặc định -->
+        <div class="avatar-option selected" data-avatar="default1">
+          <img src="https://i.pravatar.cc/80?img=1" alt="Avatar 1">
+        </div>
+        <div class="avatar-option" data-avatar="default2">
+          <img src="https://i.pravatar.cc/80?img=2" alt="Avatar 2">
+        </div>
+        <div class="avatar-option" data-avatar="default3">
+          <img src="https://i.pravatar.cc/80?img=3" alt="Avatar 3">
+        </div>
+        <!-- Tùy chọn upload avatar -->
+        <div class="avatar-option upload-option">
+          <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+          <label for="avatar-upload">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
+              <line x1="16" y1="5" x2="22" y2="5"></line>
+              <line x1="19" y1="2" x2="19" y2="8"></line>
+              <circle cx="9" cy="9" r="2"></circle>
+              <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+            </svg>
+            <span>Tải lên</span>
+          </label>
+        </div>
+      </div>
     </div>
+    
+    <form id="name-form">
+      <input type="text" id="username-input" placeholder="Tên của bạn..." required autofocus />
+      <button type="submit">Bắt đầu trò chuyện</button>
+    </form>
   </div>
+</div>
 
   <!-- Thông báo -->
   <div id="notification" class="notification">

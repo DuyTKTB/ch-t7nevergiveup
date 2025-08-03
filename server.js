@@ -134,3 +134,22 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server đang chạy trên port ${PORT}`);
 });
+// Thêm route xử lý upload avatar
+app.post('/upload-avatar', upload.single('avatar'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Không có file được tải lên' });
+  }
+
+  const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+  
+  // Tạo thư mục avatars nếu chưa có
+  const avatarDir = 'public/uploads/avatars/';
+  if (!fs.existsSync(avatarDir)) {
+    fs.mkdirSync(avatarDir, { recursive: true });
+  }
+
+  // Di chuyển file vào thư mục avatars
+  fs.renameSync(req.file.path, avatarDir + req.file.filename);
+
+  res.json({ avatarUrl });
+});

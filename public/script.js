@@ -101,3 +101,72 @@ function escapeHTML(text) {
   div.textContent = text;
   return div.innerHTML;
 }
+// Thêm các biến toàn cục
+let selectedAvatar = "https://i.pravatar.cc/80?img=1";
+let customAvatarUploaded = false;
+
+// Hàm xử lý chọn avatar
+function setupAvatarSelection() {
+  const avatarOptions = document.querySelectorAll('.avatar-option:not(.upload-option)');
+  const avatarUpload = document.getElementById('avatar-upload');
+  
+  // Xử lý chọn avatar mặc định
+  avatarOptions.forEach(option => {
+    option.addEventListener('click', () => {
+      // Bỏ chọn tất cả
+      avatarOptions.forEach(opt => opt.classList.remove('selected'));
+      // Chọn avatar hiện tại
+      option.classList.add('selected');
+      // Lấy URL avatar
+      const img = option.querySelector('img');
+      selectedAvatar = img.src;
+      customAvatarUploaded = false;
+    });
+  });
+  
+  // Xử lý upload avatar
+  avatarUpload.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Kiểm tra loại file
+    if (!file.type.match('image.*')) {
+      showNotification('Chỉ được phép tải lên hình ảnh', 'error');
+      return;
+    }
+    
+    // Kiểm tra kích thước file
+    if (file.size > 2 * 1024 * 1024) { // 2MB
+      showNotification('Kích thước ảnh tối đa là 2MB', 'error');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      selectedAvatar = event.target.result;
+      customAvatarUploaded = true;
+      
+      // Bỏ chọn tất cả avatar mặc định
+      avatarOptions.forEach(opt => opt.classList.remove('selected'));
+      
+      showNotification('Đã tải lên avatar thành công', 'success');
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Cập nhật hàm initializeChat
+function initializeChat() {
+  // Sử dụng selectedAvatar thay vì tạo ngẫu nhiên
+  AVATAR_URL = customAvatarUploaded ? selectedAvatar : selectedAvatar + "&u=" + Math.floor(Math.random() * 1000);
+  
+  // Phần còn lại giữ nguyên
+  socket = io();
+  // ...
+}
+
+// Thêm vào sự kiện DOMContentLoaded
+window.addEventListener('DOMContentLoaded', () => {
+  setupAvatarSelection();
+  // ...
+});
