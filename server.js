@@ -153,3 +153,48 @@ app.post('/upload-avatar', upload.single('avatar'), (req, res) => {
 
   res.json({ avatarUrl });
 });
+// Thêm middleware để log IP
+app.use((req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  console.log(`IP truy cập: ${ip} - Thời gian: ${new Date().toISOString()}`);
+  next();
+});
+
+// Socket.IO connection
+io.on('connection', (socket) => {
+  const clientIp = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
+  console.log(`Người dùng kết nối từ IP: ${clientIp}`);
+  
+  // Lưu IP vào object socket
+  socket.clientIp = clientIp;
+  
+  // ... phần xử lý kết nối hiện có
+});
+// Thêm model IP (nếu dùng database)
+const mongoose = require('mongoose');
+const ipSchema = new mongoose.Schema({
+  ip: String,
+  timestamp: { type: Date, default: Date.now },
+  userAgent: String
+});
+const IpModel = mongoose.model('IpLog', ipSchema);
+
+// Middleware lưu IP
+app.use(async (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  await IpModel.create({
+    ip,
+    userAgent: req.headers['user-agent']
+  });
+  next();
+});
+// Thêm route admin (bảo mật bằng password)
+app.get('/admin/ips', async (req, res) => {
+  // Kiểm tra auth
+  if (req.query.password !== 'YOUR_SECURE_PASSWORD') {
+    return res.status(403).send('Truy cập bị từ chối');
+  }
+  
+  const ips = await IpModel.find().sort({ timestamp: -1 });
+  res.json(ips);
+});
